@@ -4,7 +4,11 @@ Prajna-Bench is a metacognition benchmark notebook suite for the Google DeepMind
 
 ## Results Summary
 
-Open [results_summary.html](./results_summary.html) in a browser to view the formatted benchmark summary with the leaderboard, axis hierarchy, Sakshi self-correction rates, statistical tests, and headline findings.
+Read the formatted results summary here:
+
+https://raman369ai.github.io/prajna-bench/results_summary.html
+
+You can also open [results_summary.html](./results_summary.html) directly from the repository to view the leaderboard, axis hierarchy, Sakshi self-correction rates, statistical tests, and headline findings.
 
 ## Notebooks
 
