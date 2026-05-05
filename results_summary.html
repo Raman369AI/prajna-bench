@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prajna-Bench Results Summary</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f9f9f7; color: #1a1a18; line-height: 1.6; padding: 2rem; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+  .subtitle { font-size: 14px; color: #5f5e5a; margin-bottom: 28px; }
+  .section-label { font-size: 11px; font-weight: 600; color: #888780; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+  .section { margin-bottom: 28px; }
+  h2.section-title { font-size: 15px; font-weight: 600; color: #1a1a18; margin-bottom: 14px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 24px; }
+  .metric-card { background: #f1efe8; border-radius: 8px; padding: 14px 16px; }
+  .metric-label { font-size: 12px; color: #5f5e5a; margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 600; color: #1a1a18; }
+  .metric-sub { font-size: 11px; color: #888780; margin-top: 2px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { font-size: 11px; font-weight: 600; color: #888780; text-align: left; padding: 6px 10px; border-bottom: 1px solid #e0ded6; }
+  td { padding: 9px 10px; border-bottom: 1px solid #e0ded6; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .rank { font-weight: 600; color: #888780; }
+  .model-name { font-weight: 600; color: #1a1a18; }
+  .provider { font-size: 11px; color: #888780; }
+  .score-cell { display: flex; align-items: center; gap: 8px; }
+  .score-num { font-size: 13px; font-weight: 600; min-width: 32px; }
+  .bar-bg { background: #e0ded6; border-radius: 3px; height: 6px; width: 80px; position: relative; }
+  .bar-fill { border-radius: 3px; height: 6px; position: absolute; left: 0; top: 0; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; display: inline-block; }
+  .conf-good { background: #eaf3de; color: #3b6d11; }
+  .conf-bad { background: #fcebeb; color: #a32d2d; }
+  .conf-mid { background: #faeeda; color: #854f0b; }
+  .tier-1 { background: #e1f5ee; color: #0f6e56; }
+  .tier-2 { background: #e6f1fb; color: #185fa5; }
+  .tier-3 { background: #f1efe8; color: #5f5e5a; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .panel { background: #fff; border: 1px solid #e0ded6; border-radius: 12px; padding: 16px; }
+  .stat-row { display: flex; gap: 16px; align-items: flex-start; padding: 7px 0; border-bottom: 1px solid #e0ded6; font-size: 13px; }
+  .stat-row:last-child { border-bottom: none; }
+  .stat-key { color: #5f5e5a; flex: 1; }
+  .stat-val { font-weight: 600; color: #1a1a18; text-align: right; }
+  .sakshi-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+  .sakshi-label { font-size: 12px; width: 160px; color: #5f5e5a; }
+  .sakshi-pct { font-size: 12px; font-weight: 600; min-width: 32px; color: #1a1a18; }
+  .ordering-row { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid #e0ded6; font-size: 12px; }
+  .ordering-row:last-child { border-bottom: none; }
+  .model-short { width: 140px; color: #5f5e5a; }
+  .ax-score { font-weight: 600; width: 42px; }
+  .arrow { color: #b4b2a9; }
+  .findings { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .finding-card { background: #fff; border: 1px solid #e0ded6; border-radius: 12px; padding: 14px; }
+  .finding-num { font-size: 11px; font-weight: 600; color: #888780; margin-bottom: 6px; }
+  .finding-title { font-size: 13px; font-weight: 600; color: #1a1a18; margin-bottom: 6px; line-height: 1.4; }
+  .finding-body { font-size: 12px; color: #5f5e5a; line-height: 1.6; }
+  .note { font-size: 11px; color: #888780; margin-top: 8px; }
+  .highlight { color: #185fa5; }
+  .leaderboard-wrapper { background: #fff; border: 1px solid #e0ded6; border-radius: 12px; padding: 0; overflow: hidden; }
+  .leaderboard-wrapper table { border-radius: 12px; }
+  @media (max-width: 700px) {
+    body { padding: 1rem; }
+    .metric-grid { grid-template-columns: 1fr 1fr; }
+    .two-col, .findings { grid-template-columns: 1fr; }
+    .leaderboard-wrapper { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>Prajna-Bench - Results Summary</h1>
+  <p class="subtitle">Google DeepMind x Kaggle AGI Hackathon · Metacognition Track · April 2026 · <code>prajna_v4_final.ipynb</code></p>
+
+  <div class="section">
+    <div class="section-label">Overview</div>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-label">Models evaluated</div>
+        <div class="metric-value">7</div>
+        <div class="metric-sub">frontier + open-weight</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Items per model</div>
+        <div class="metric-value">100</div>
+        <div class="metric-sub">3 independent runs</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Kruskal-Wallis H</div>
+        <div class="metric-value">20.55</div>
+        <div class="metric-sub">p = 0.0022 **</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Max Prajna score</div>
+        <div class="metric-value">0.58</div>
+        <div class="metric-sub">all models below 0.6</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Leaderboard</h2>
+    <div class="leaderboard-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Model</th>
+            <th>Prajna</th>
+            <th>Pramana</th>
+            <th>Neti-Neti</th>
+            <th>Adhyasa</th>
+            <th>Sakshi</th>
+            <th>Conf=100</th>
+            <th>Tier</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="rank">1</td>
+            <td><div class="model-name">Claude Sonnet 4.6</div><div class="provider">Anthropic</div></td>
+            <td><div class="score-cell"><span class="score-num highlight">0.58</span><div class="bar-bg"><div class="bar-fill" style="width:96.7%;background:#185FA5"></div></div></div></td>
+            <td>~0.65</td><td>~0.40</td><td>~0.34</td><td>42%</td>
+            <td><span class="badge conf-good">0%</span></td>
+            <td><span class="badge tier-1">Tier 1</span></td>
+          </tr>
+          <tr>
+            <td class="rank">2</td>
+            <td><div class="model-name">GPT-5.4</div><div class="provider">OpenAI</div></td>
+            <td><div class="score-cell"><span class="score-num">0.53</span><div class="bar-bg"><div class="bar-fill" style="width:88.3%;background:#378ADD"></div></div></div></td>
+            <td>~0.60</td><td>~0.38</td><td>~0.30</td><td>33%</td>
+            <td><span class="badge conf-good">0%</span></td>
+            <td><span class="badge tier-2">Tier 2</span></td>
+          </tr>
+          <tr>
+            <td class="rank">3</td>
+            <td><div class="model-name">Qwen3-235B</div><div class="provider">Alibaba</div></td>
+            <td><div class="score-cell"><span class="score-num">0.50</span><div class="bar-bg"><div class="bar-fill" style="width:83.3%;background:#378ADD"></div></div></div></td>
+            <td>~0.58</td><td>~0.36</td><td>~0.28</td><td>31%</td>
+            <td><span class="badge conf-mid">8%</span></td>
+            <td><span class="badge tier-2">Tier 2</span></td>
+          </tr>
+          <tr>
+            <td class="rank">4</td>
+            <td><div class="model-name">Gemini 2.5 Pro</div><div class="provider">Google</div></td>
+            <td><div class="score-cell"><span class="score-num">0.48</span><div class="bar-bg"><div class="bar-fill" style="width:80%;background:#378ADD"></div></div></div></td>
+            <td>~0.55</td><td>~0.34</td><td>~0.26</td><td>12%</td>
+            <td><span class="badge conf-bad">27%</span></td>
+            <td><span class="badge tier-2">Tier 2</span></td>
+          </tr>
+          <tr>
+            <td class="rank">5</td>
+            <td><div class="model-name">DeepSeek R1</div><div class="provider">DeepSeek</div></td>
+            <td><div class="score-cell"><span class="score-num">0.46</span><div class="bar-bg"><div class="bar-fill" style="width:76.7%;background:#378ADD"></div></div></div></td>
+            <td>~0.53</td><td>~0.33</td><td>~0.24</td><td>40%</td>
+            <td><span class="badge conf-mid">14%</span></td>
+            <td><span class="badge tier-2">Tier 2</span></td>
+          </tr>
+          <tr>
+            <td class="rank">6</td>
+            <td><div class="model-name">Gemini 2.5 Flash</div><div class="provider">Google</div></td>
+            <td><div class="score-cell"><span class="score-num">0.38</span><div class="bar-bg"><div class="bar-fill" style="width:63.3%;background:#888780"></div></div></div></td>
+            <td>~0.45</td><td>~0.27</td><td>~0.20</td><td>27%</td>
+            <td><span class="badge conf-bad">26%</span></td>
+            <td><span class="badge tier-3">Tier 3</span></td>
+          </tr>
+          <tr>
+            <td class="rank">7</td>
+            <td><div class="model-name">Gemma-3-27B</div><div class="provider">Google (open)</div></td>
+            <td><div class="score-cell"><span class="score-num">0.30</span><div class="bar-bg"><div class="bar-fill" style="width:50%;background:#B4B2A9"></div></div></div></td>
+            <td>~0.36</td><td>~0.21</td><td>~0.16</td><td>23%</td>
+            <td><span class="badge conf-mid">5%</span></td>
+            <td><span class="badge tier-3">Tier 3</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Conf=100 = rate of maximum-confidence responses. Sakshi = genuine self-correction rate in phase 2. Per-axis scores approximated from reported composite and ordinal patterns.</p>
+  </div>
+
+  <div class="section two-col">
+    <div class="panel">
+      <h2 class="section-title">P &gt; N &gt; A hierarchy - all models</h2>
+      <p style="font-size:12px;color:#5f5e5a;margin-bottom:12px;line-height:1.5;">Pramana &gt; Neti-Neti &gt; Adhyasa ordering holds across all 7 models without exception, suggesting a structural property of autoregressive generation.</p>
+      <div class="ordering-row">
+        <div class="model-short">Claude Sonnet 4.6</div>
+        <div class="ax-score" style="color:#185FA5">P ~.65</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#1D9E75">N ~.40</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#BA7517">A ~.34</div>
+      </div>
+      <div class="ordering-row">
+        <div class="model-short">GPT-5.4</div>
+        <div class="ax-score" style="color:#185FA5">P ~.60</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#1D9E75">N ~.38</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#BA7517">A ~.30</div>
+      </div>
+      <div class="ordering-row">
+        <div class="model-short">Gemini 2.5 Pro</div>
+        <div class="ax-score" style="color:#185FA5">P ~.55</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#1D9E75">N ~.34</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#BA7517">A ~.26</div>
+      </div>
+      <div class="ordering-row">
+        <div class="model-short">DeepSeek R1</div>
+        <div class="ax-score" style="color:#185FA5">P ~.53</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#1D9E75">N ~.33</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#BA7517">A ~.24</div>
+      </div>
+      <div class="ordering-row">
+        <div class="model-short">Gemma-3-27B</div>
+        <div class="ax-score" style="color:#185FA5">P ~.36</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#1D9E75">N ~.21</div>
+        <div class="arrow">&gt;</div>
+        <div class="ax-score" style="color:#BA7517">A ~.16</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2 class="section-title">Sakshi self-correction rates</h2>
+      <p style="font-size:12px;color:#5f5e5a;margin-bottom:12px;line-height:1.5;">After phase 2 reflection, what fraction of phase 1 errors were genuinely corrected? Low rates indicate self-persuasion: confidence rises without accuracy improvement.</p>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">Claude Sonnet 4.6</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:42%;background:#185FA5;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">42%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">DeepSeek R1</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:40%;background:#378ADD;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">40%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">GPT-5.4</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:33%;background:#378ADD;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">33%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">Qwen3-235B</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:31%;background:#5DCAA5;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">31%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">Gemini 2.5 Flash</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:27%;background:#888780;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">27%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">Gemma-3-27B</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:23%;background:#888780;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct">23%</div>
+      </div>
+      <div class="sakshi-bar">
+        <div class="sakshi-label">Gemini 2.5 Pro</div>
+        <div style="flex:1;background:#e0ded6;border-radius:3px;height:6px;position:relative;"><div style="width:12%;background:#E24B4A;height:6px;border-radius:3px;position:absolute;left:0;top:0;"></div></div>
+        <div class="sakshi-pct" style="color:#a32d2d">12%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section two-col">
+    <div class="panel">
+      <div class="section-label">Statistical tests</div>
+      <div class="stat-row"><div class="stat-key">Kruskal-Wallis H (composite)</div><div class="stat-val">H = 20.55, p = 0.0022 **</div></div>
+      <div class="stat-row"><div class="stat-key">Adhyasa axis H</div><div class="stat-val">H = 37+, p &lt; 0.001 ***</div></div>
+      <div class="stat-row"><div class="stat-key">Neti-Neti axis H</div><div class="stat-val">H = 15.14, p &lt; 0.001 ***</div></div>
+      <div class="stat-row"><div class="stat-key">Cohen's d (Claude vs GPT-5.4)</div><div class="stat-val">d = 0.617 (medium)</div></div>
+      <div class="stat-row"><div class="stat-key">Gemini overconfidence rate</div><div class="stat-val">26-27% conf=100</div></div>
+      <div class="stat-row"><div class="stat-key">Gemini accuracy @ conf=100</div><div class="stat-val">57.9% only</div></div>
+      <div class="stat-row"><div class="stat-key">Gemini Sakshi gap (p-value)</div><div class="stat-val">p = 0.0005</div></div>
+    </div>
+    <div class="panel">
+      <div class="section-label">Judge architecture</div>
+      <div class="stat-row"><div class="stat-key">Rotating judges (3 total)</div><div class="stat-val">Opus 4.6, Gemini 3.1 Pro, GPT-5.4</div></div>
+      <div class="stat-row"><div class="stat-key">Self-judging rule</div><div class="stat-val">Provider excluded from own eval</div></div>
+      <div class="stat-row"><div class="stat-key">Runs per model</div><div class="stat-val">3 independent runs</div></div>
+      <div class="stat-row"><div class="stat-key">Benchmark items</div><div class="stat-val">100 structured items</div></div>
+      <div class="stat-row"><div class="stat-key">Axes evaluated</div><div class="stat-val">Pramana, Neti-Neti, Adhyasa, Sakshi</div></div>
+      <div class="stat-row"><div class="stat-key">Notebook</div><div class="stat-val">prajna_v4_final.ipynb (15 cells)</div></div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2 class="section-title">Three headline findings</h2>
+    <div class="findings">
+      <div class="finding-card">
+        <div class="finding-num">Finding 1</div>
+        <div class="finding-title">Universal metacognitive weakness</div>
+        <div class="finding-body">No frontier model exceeded 0.6 on the Prajna composite. The benchmark's primary thesis is confirmed: this is not a ranking exercise - it exposes a structural deficit across all architectures. Models can narrate reasoning but cannot reliably detect their own knowledge boundaries.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 2</div>
+        <div class="finding-title">P &gt; N &gt; A ordering is universal</div>
+        <div class="finding-body">The axis hierarchy Pramana &gt; Neti-Neti &gt; Adhyasa holds across all 7 models without exception - from Claude down to Gemma-3-27B. Consistency across architecturally different models suggests a structural property of autoregressive generation, not a training-specific artifact.</div>
+      </div>
+      <div class="finding-card">
+        <div class="finding-num">Finding 3</div>
+        <div class="finding-title">Gemini overconfidence is the standout</div>
+        <div class="finding-body">Gemini 2.5 Pro claims maximum confidence on 27% of items but achieves only 57.9% accuracy on those items. Claude and GPT-5.4 reach 0% conf=100. Gemini's Sakshi gap is significant at p=0.0005 - reflection increases confidence without improving accuracy.</div>
+      </div>
+    </div>
+  </div>
+
+  <p style="font-size:11px;color:#b4b2a9;text-align:center;margin-top:16px;">Prajna-Bench · Raman369AI · Generated May 2026</p>
+</div>
+</body>
+</html>
